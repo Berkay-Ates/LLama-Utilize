@@ -1,5 +1,5 @@
 import requests
-from config.settings import Config
+from llama.config.settings import Config
 from llama.base import LlamaBase
 import json
 
