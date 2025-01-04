@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
@@ -16,6 +16,7 @@ class MessageType(Enum):
     IMAGE = "image_url"
 
 
+@runtime_checkable
 class BaseMessage(Protocol):
     """
     This is a protocol class that defines the structure of a message.
