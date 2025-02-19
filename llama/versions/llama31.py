@@ -2,6 +2,7 @@ import requests
 from llama.config.settings import Config
 from llama.base import LlamaBase
 import json
+from together import Together
 
 
 class Llama31(LlamaBase):
@@ -11,6 +12,7 @@ class Llama31(LlamaBase):
         self._base_url = Config.get_base_url_prompt()
         self.model_size = model_size
         self.temperature = temperature
+        self.client = Together()
 
         if not self._api_key:
             raise ValueError("API key is missing. Set TOGETHER_API_KEY in your environment.")
@@ -36,19 +38,20 @@ class Llama31(LlamaBase):
         return f"meta-llama/Meta-Llama-3.1-{self.model_size}B-Instruct-Turbo"
 
     def send_request(self, messages: dict):
+
         try:
-            response = requests.post(
-                self._base_url, headers=self.get_authorization(), data=json.dumps(self.get_payload(messages))
+            response = self.client.chat.completions.create(
+                model=self.get_model(),
+                messages=messages,
             )
-            response.raise_for_status()  # Raises HTTPError for bad responses
-            res = response.json()
+
         except requests.exceptions.RequestException as e:
             raise Exception(f"Request failed: {e}")
 
-        if "error" in res:
-            raise Exception(f"API Error: {res['error']}")
+        if "error" in response:
+            raise Exception(f"API Error: {response['error']}")
 
-        return res["choices"][0]["message"]["content"]
+        return response.choices[0].message.content
 
     def generate(self, messages):
         return self.send_request(messages)
