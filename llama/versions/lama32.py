@@ -2,6 +2,7 @@ import requests
 from llama.config.settings import Config
 from llama.base import LlamaBase
 import json
+from together import Together
 
 
 class Llama32(LlamaBase):
@@ -13,6 +14,7 @@ class Llama32(LlamaBase):
         self.model_size = model_size
         self.max_tokens = max_tokens
         self.temperature = temperature
+        self.client = Together()
 
         if not self._api_key:
             raise ValueError("API key is missing. Set TOGETHER_API_KEY in your environment.")
@@ -42,21 +44,18 @@ class Llama32(LlamaBase):
     def send_request(self, message: dict):
 
         try:
-            res = requests.request(
-                "POST",
-                self._base_url,
-                headers=self.get_authorization(),
-                data=json.dumps(self.get_payload(message)),
-            ).content
-            res = json.loads(res)
+            response = self.client.chat.completions.create(
+                model=self.get_model(),
+                messages=message,
+            )
 
         except requests.exceptions.RequestException as e:
             raise Exception(f"Request failed: {e}")
 
-        if "error" in res:
-            raise Exception(res["error"])
+        if "error" in response:
+            raise Exception(response["error"])
 
-        return res["choices"][0]["message"]["content"]
+        return response.choices[0].message.content
 
     def generate(self, message):
         if message is None or message == "":
